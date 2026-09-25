@@ -12,37 +12,35 @@ The Angelos Engine is an AI-powered application that connects authoritative poli
 
 ## Core Idea
 
-Think **VirusTotal, but for public policy**: instead of running a file through dozens of antivirus engines and showing exactly which engine flagged what, Angelos runs a policy document through multiple analysis modules and shows exactly which source backs each claim in the final briefing.
-
-The non-negotiable design rule: **never blend policy fact, news reporting, public opinion, and AI interpretation into one undifferentiated blob.** Every output is traceable back to what kind of source it came from.
+Think **VirusTotal, but for public policy**. Instead of running a file through dozens of antivirus engines and showing exactly which engine flagged what, Angelos runs a policy document through multiple analysis modules and shows exactly which source backs each claim in the final briefing.
 
 ## System Architecture
 
 | Mythological Anchor | Module | Function |
 |---|---|---|
-| **Angelos** (The Messenger) | Angelos Briefing Engine | Core dashboard that compiles the final evidence-grounded briefing, separating policy fact from public rumor |
-| **Socrates** (The Gadfly) | Socratic Cross-Examiner | RAG-powered QA module that interrogates policy text against public comments to surface contradictions and misunderstandings |
+| **Angelos**  | Angelos Engine | Core dashboard that compiles the final evidence-grounded briefing that helps separate policy fact from public rumor |
+| **Socrates** | Socrates in Agora | RAG-powered QA module that interrogates policy text against public comments to surface contradictions and misunderstandings |
 | **The Chorus** | Chorus Aggregator | Ingestion pipeline that pulls in social posts, call logs, and surveys and clusters them into unified public-sentiment waves |
-| **Hermes** (Messenger of the Gods) | Hermes Translator | NLP layer that breaks dense, jargon-heavy legal text into plain-language summaries |
-| **Pheme** (Goddess of Rumor) | Pheme Bias & Rumor Filter | Data-provenance module that flags source bias, echo chambers, and misinformation |
+| **Athene** | Athene Translator | NLP layer that breaks dense, jargon-heavy legal text into plain-language summaries |
+| **Pheme** | Pheme Bias & Rumor Filter | Data-provenance module that flags source bias, echo chambers, and misinformation |
 
 ```
 [ Policy Document Input ]
           │
           ▼
-  Hermes Translator  ──────► plain-language policy summary
+  Athene Translator  ──────► plain-language policy summary
           │
           ▼
   Chorus Aggregator  ──────► ingests news / comments / social, tagged by source type
           │
           ▼
-  Socratic Cross-Examiner ─► RAG QA: cites policy text + public sources, flags contradictions
+   Socrates in Agora ────────► RAG QA: cites policy text + public sources, flags contradictions
           │
           ▼
   Pheme Bias Filter  ──────► scores source reliability / representativeness
           │
           ▼
-  Angelos Briefing Engine ─► final briefing, color/tab-coded by source type, with confidence scores
+    Angelos Engine ────────► final briefing, color/tab-coded by source type, with confidence scores
 ```
 
 ## What It Does
