@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Angelos Engine</title>
+<style>
+  :root{
+    --bg:#0b0e1a; --panel:#141a2e; --panel2:#111527; --border:#262d47;
+    --text:#e8ecf4; --muted:#8892b0;
+    --pink:#e344e0; --purple:#7c3aed; --purple2:#8b5cf6;
+    --green:#22c55e; --green-bg:#0f2318; --red:#f85149; --red-bg:#2a1216;
+    --amber:#d29922; --amber-bg:#2a2110;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  header{
+    display:flex; align-items:center; gap:16px; padding:14px 24px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:var(--bg); z-index:10; padding-top:calc(14px + env(safe-area-inset-top,0px));
+  }
+  .logo{font-size:26px; font-weight:800; color:var(--pink); font-family:Georgia,serif; cursor:pointer; flex-shrink:0;}
+  .searchbar{flex:1; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:9px 14px; color:var(--muted); font-size:13px;}
+  .new-scan-btn{background:var(--purple); color:#fff; border:none; padding:8px 16px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; display:none;}
+  .new-scan-btn.show{display:inline-block;}
+  header .icon{color:var(--muted); font-size:16px; cursor:pointer; flex-shrink:0;}
+  .signin{color:var(--text); font-size:13px; cursor:pointer; flex-shrink:0;}
+  .signup{background:var(--purple); color:#fff; border:none; padding:8px 18px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0;}
+
+  .screen{display:none;} .screen.active{display:block;}
+
+  #landing{text-align:center; padding:90px 20px 40px;}
+  #landing h2{font-size:64px; margin:0 0 16px; font-weight:800; letter-spacing:1px; color:var(--pink); text-shadow:0 0 40px rgba(227,68,224,.25);}
+  #landing p.sub{color:var(--muted); font-size:15px; margin:0 auto 40px; max-width:520px; line-height:1.6;}
+  .vt-tabs{display:flex; justify-content:center; gap:48px; border-bottom:1px solid var(--border); max-width:800px; margin:0 auto;}
+  .vt-tab{padding:12px 4px; font-size:13px; color:var(--muted); letter-spacing:1px;}
+  .vt-tab.active{color:var(--text); border-bottom:2px solid var(--purple2); margin-bottom:-1px;}
+  .vt-tab.disabled{color:#3f4664; cursor:not-allowed; display:flex; align-items:center; gap:6px;}
+  .vt-tab.disabled .soon{font-size:9px; border:1px solid #3f4664; border-radius:8px; padding:1px 6px; letter-spacing:0;}
+  .dropwrap{max-width:800px; margin:50px auto 0;}
+  .dropzone{border:0; padding:10px; cursor:pointer;}
+  .dropzone .icon{font-size:56px; color:#4b5570; margin-bottom:18px;}
+  .choose-btn{background:transparent; border:1px solid var(--purple2); color:var(--purple2); padding:10px 26px; border-radius:6px; font-size:13px; cursor:pointer;}
+  .choose-btn:hover{background:rgba(139,92,246,.1);}
+  .terms{color:var(--muted); font-size:12px; margin:26px auto 0; max-width:600px; line-height:1.7;}
+  .terms a{color:#7dd3fc;}
+  .banner{max-width:800px; margin:26px auto 0; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:12px; font-size:12px; color:var(--muted);}
+  #fileInput{display:none;}
+
+  #scanning{text-align:center; padding-top:160px;}
+  .spinner{width:44px;height:44px;border:3px solid var(--border); border-top-color:var(--purple2); border-radius:50%; margin:0 auto 22px; animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #scanning .status{color:var(--muted); font-size:13px;}
+
+  #results{max-width:1100px; margin:0 auto; padding:22px 24px 60px;}
+  .back-btn{background:none; border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:6px; font-size:12px; cursor:pointer; margin-bottom:18px;}
+  .back-btn:hover{color:var(--text); border-color:var(--purple2);}
+  .res-top{display:flex; gap:20px;}
+  .score-card{width:220px; flex-shrink:0; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:20px; display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .ring{width:120px;height:120px;border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column;}
+  .ring .n{font-size:26px; font-weight:700;}
+  .ring .d{font-size:12px; color:var(--muted);}
+  .csc{background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:12px; color:var(--muted);}
+  .report-card{flex:1; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:20px;}
+  .report-card .title{font-size:13px; color:var(--muted); margin-bottom:10px;}
+  .report-card .fname{font-size:15px; font-weight:600; margin-bottom:14px; word-break:break-all;}
+  .meta-row{display:flex; gap:40px; flex-wrap:wrap;}
+  .meta-row div span.k{display:block; font-size:11px; color:var(--muted); margin-bottom:3px;}
+  .meta-row div span.v{font-size:13px; font-weight:600;}
+
+  .tabs{display:flex; gap:36px; border-bottom:1px solid var(--border); margin:26px 0 20px; overflow-x:auto;}
+  .tab{padding:10px 2px; font-size:12px; letter-spacing:.5px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+  .tab.active{color:var(--text); border-color:var(--purple2);}
+  .tabpanel{display:none;} .tabpanel.active{display:block;}
+
+  .callout{border-left:3px solid var(--purple2); background:var(--panel); border-radius:6px; padding:14px 18px; font-size:13px; color:#c9d1d9; margin-bottom:22px; line-height:1.6;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:16px 20px; margin-bottom:14px;}
+  .card h3{margin:0 0 8px; font-size:13px; letter-spacing:.5px; color:var(--muted); font-weight:600; text-transform:uppercase;}
+  .card p{margin:0; font-size:13px; color:#c9d1d9; line-height:1.65;}
+
+  .vendor-section-title{font-size:13px; color:var(--text); font-weight:600; margin:6px 0 10px;}
+  .vendor-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 40px;}
+  .vendor-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .status-pill.ok{color:var(--green);} .status-pill.bad{color:var(--red);} .status-pill.mid{color:var(--amber);}
+
+  .concern-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .bar-bg{background:#1c2340; border-radius:4px; height:6px; width:120px; overflow:hidden;}
+  .bar-fill{height:100%;}
+
+  .src-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; margin-top:8px;}
+  .src-chip{background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:12px 14px;}
+  .src-chip .nm{font-size:12.5px; font-weight:600; margin-bottom:4px; color:#c9b8ff;}
+  .src-chip .ds{font-size:11.5px; color:var(--muted); line-height:1.5;}
+
+  @media(max-width:640px){ .res-top{flex-direction:column;} .score-card{width:100%;} #landing h2{font-size:38px;} .vendor-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="showScreen('landing')" title="Home">Σ</div>
+  <div class="searchbar">🔍 URL, IP address, domain or file hash</div>
+  <button class="new-scan-btn" id="headerNewScan" onclick="showScreen('landing')">+ New scan</button>
+  <div class="icon">⬆</div>
+  <div class="icon">💬</div>
+  <div class="icon">❔</div>
+  <div class="icon">☀</div>
+  <div class="signin">Sign in</div>
+  <button class="signup">Sign up</button>
+</header>
+
+<div class="screen active" id="landing">
+  <h2>ANGELOS ΣNGINE</h2>
+  <p class="sub">Upload a draft regulation to cross-reference it against public comments, news coverage, and citizen feedback.</p>
+  <div class="vt-tabs">
+    <div class="vt-tab active">FILE</div>
+    <div class="vt-tab disabled">URL <span class="soon">soon</span></div>
+    <div class="vt-tab disabled">SEARCH <span class="soon">soon</span></div>
+  </div>
+  <div class="dropwrap">
+    <div class="dropzone" id="dropzone">
+      <div class="icon">🗎</div>
+      <button class="choose-btn" type="button">Choose file</button>
+    </div>
+    <div class="terms">By submitting data above, you are agreeing to our <a href="#">Terms of Service</a> and <a href="#">Privacy Notice</a>, and to the <strong>sharing of your submission for analyst review.</strong> Please do not submit personal information; PII is automatically scrubbed prior to processing. <a href="#">Learn more.</a></div>
+    <div class="banner">ⓘ Automating submissions with an API — coming soon</div>
+  </div>
+  <input type="file" id="fileInput">
+</div>
+
+<div class="screen" id="scanning">
+  <div class="spinner"></div>
+  <div id="scanFileName" style="font-size:14px; margin-bottom:6px;"></div>
+  <div class="status" id="scanStatus">Parsing document…</div>
+</div>
+
+<div class="screen" id="results">
+  <button class="back-btn" onclick="showScreen('landing')">← New scan</button>
+
+  <div class="res-top">
+    <div class="score-card">
+      <div class="ring" id="ring">
+        <div class="n" id="ringN">—</div>
+        <div class="d" id="ringD">/92</div>
+      </div>
+      <div class="csc">Community Score <span id="cscVal">—</span></div>
+    </div>
+    <div class="report-card">
+      <div class="title" id="reportTitle">Policy report for —</div>
+      <div class="fname" id="resFileName">—</div>
+      <div class="meta-row">
+        <div><span class="k">STATUS</span><span class="v" id="metaStatus">—</span></div>
+        <div><span class="k">CONTENT TYPE</span><span class="v">application/pdf</span></div>
+        <div><span class="k">LAST ANALYSIS DATE</span><span class="v" id="metaDate">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="summary">SUMMARY</div>
+    <div class="tab" data-tab="detection">DETECTION</div>
+    <div class="tab" data-tab="details">DETAILS</div>
+    <div class="tab" data-tab="sources">SOURCES &amp; TOOLS</div>
+  </div>
+
+  <div class="callout" id="callout"></div>
+
+  <div class="tabpanel active" id="panel-summary">
+    <div class="card"><h3>Policy language</h3><p id="sumPolicy"></p></div>
+    <div class="card"><h3>AI interpretation</h3><p id="sumAI"></p></div>
+    <div class="card"><h3>Affected stakeholders</h3><p id="stakeList"></p></div>
+  </div>
+
+  <div class="tabpanel" id="panel-detection">
+    <div class="vendor-section-title">Source cross-reference analysis</div>
+    <div class="vendor-grid" id="vendorGrid"></div>
+  </div>
+
+  <div class="tabpanel" id="panel-details">
+    <div class="card"><h3>Recurring concerns across sources</h3><div id="concernsList"></div></div>
+  </div>
+
+  <div class="tabpanel" id="panel-sources">
+    <div class="vendor-section-title">Data &amp; model sources</div>
+    <div class="src-grid" id="srcGrid"></div>
+  </div>
+</div>
+
+<script>
+  const SOURCES = [
+    {nm:'Congress.gov API', ds:'Bill text and legislative history cross-reference'},
+    {nm:'Regulations.gov API', ds:'Public comment ingestion'},
+    {nm:'Federal Register', ds:'Official rule publication tracking'},
+    {nm:'GovInfo', ds:'Authoritative government document retrieval'},
+    {nm:'Data.gov', ds:'Public dataset enrichment'},
+    {nm:'GDELT Project', ds:'Global news and event monitoring'},
+    {nm:'Microsoft Responsible AI Tools and Practices', ds:'Governance and safety guardrails'},
+    {nm:'Microsoft Foundry', ds:'Model orchestration and deployment'},
+    {nm:'Azure AI Search', ds:'Vector retrieval for RAG'},
+    {nm:'Microsoft Fabric', ds:'Data ingestion and pipeline management'}
+  ];
+
+  const DATA = {
+    approved: {
+      match:'approvedandfinalpolicy', level:'clean', verdict:'0', ringColor:'var(--green)', ringBg:'var(--green-bg)', status:'Clean', cscVal:'+312',
+      title:'Policy report for', ok:true,
+      summaryPolicy:'This is the finalized, congressionally approved version of the housing density amendment. Language has been reviewed and reconciled against prior public comment cycles.',
+      summaryAI:'No unresolved contradictions found between policy language and public feedback. Prior concerns from the draft stage were addressed in this final version.',
+      stakeholders:'Small residential developers, local zoning boards, tenant advocacy groups — all feedback channels show alignment with the final text.',
+      concerns:[{label:'Clarity of filing timeline', pct:8},{label:'Residual cost concerns (minor)', pct:12}],
+      vendors:['Regulations.gov Comments','Federal Register Notice','GDELT News Coverage','Local News Wire','Community Surveys','Call-Center Transcripts','Congress.gov Cross-check','Stakeholder Submissions','Social Sentiment Feed','Citizen Correspondence']
+    },
+    intern: {
+      match:'interndraftedpolicy', level:'flagged', verdict:'89', ringColor:'var(--red)', ringBg:'var(--red-bg)', status:'Flagged', cscVal:'-204',
+      title:'Policy report for', ok:false,
+      summaryPolicy:'This is an early, unreviewed intern draft. Language is ambiguous around the density cap threshold and has not been reconciled against legal or stakeholder review.',
+      summaryAI:'Widespread contradiction detected between draft language and public expectation. High likelihood of misinterpretation if published without revision — flagged for mandatory analyst review before release.',
+      stakeholders:'Small residential developers, environmental review agencies, tenant advocacy groups — all show conflicting or confused reactions to this draft.',
+      concerns:[{label:'Belief the policy halts all construction', pct:81},{label:'Ambiguous filing requirement language', pct:74},{label:'No timeline for compliance provided', pct:66},{label:'Contradicts prior public commitments', pct:58}],
+      vendors:['Regulations.gov Comments','Federal Register Notice','GDELT News Coverage','Local News Wire','Community Surveys','Call-Center Transcripts','Congress.gov Cross-check','Stakeholder Submissions','Social Sentiment Feed','Citizen Correspondence']
+    }
+  };
+
+  const RANDOM_RESULTS = [
+    {
+      title:'Policy report for', level:'clean', verdict:'6', ringColor:'var(--green)', ringBg:'var(--green-bg)', status:'Clean', cscVal:'+198',
+      summaryPolicy:'This draft restructures public transit fare tiers, introducing income-based discounts and consolidating zone boundaries from 6 to 3.',
+      summaryAI:'Public reaction is largely favorable. Minor confusion exists around eligibility verification for the discount tier, but no major contradictions with the policy text were found.',
+      stakeholders:'Daily commuters, low-income riders, transit authority staff, and regional employers relying on commuter access.',
+      concerns:[{label:'Confusion on discount eligibility proof', pct:22},{label:'Timeline for zone consolidation rollout', pct:14}]
+    },
+    {
+      title:'Policy report for', level:'clean', verdict:'19', ringColor:'var(--green)', ringBg:'var(--green-bg)', status:'Clean', cscVal:'+140',
+      summaryPolicy:'This draft expands the small business tax credit program, raising the eligibility revenue cap and adding a fast-track application window.',
+      summaryAI:'Sentiment is broadly positive among small business owners. A small cluster of comments question whether the revenue cap increase adequately covers regional cost-of-living differences.',
+      stakeholders:'Small business owners, local chambers of commerce, regional economic development offices.',
+      concerns:[{label:'Revenue cap not adjusted for regional cost of living', pct:31},{label:'Application backlog concerns', pct:18}]
+    },
+    {
+      title:'Policy report for', level:'moderate', verdict:'47', ringColor:'var(--amber)', ringBg:'var(--amber-bg)', status:'Needs Review', cscVal:'-42',
+      summaryPolicy:'This draft revises school zoning boundaries in three districts, shifting roughly 1,200 students to new assigned schools starting next academic year.',
+      summaryAI:'Reaction is split along district lines. Parents in two districts report the notice period as insufficient; the policy text does not currently specify a transition or appeal process.',
+      stakeholders:'Parents and guardians in affected districts, school administrators, local school boards, student transportation services.',
+      concerns:[{label:'No transition period specified in draft', pct:58},{label:'Lack of formal appeal process', pct:52},{label:'Notice timeline seen as too short', pct:44}]
+    },
+    {
+      title:'Policy report for', level:'moderate', verdict:'54', ringColor:'var(--amber)', ringBg:'var(--amber-bg)', status:'Needs Review', cscVal:'-67',
+      summaryPolicy:'This draft adjusts municipal water utility rate tiers, introducing a higher marginal rate for usage above the regional average.',
+      summaryAI:'Comments show significant confusion between "average" and "median" usage benchmarks referenced in the policy text, leading many commenters to believe the rate change affects them when it does not.',
+      stakeholders:'Residential ratepayers, agricultural water users, the municipal utility board, and low-income assistance program administrators.',
+      concerns:[{label:'Misunderstanding of usage benchmark definition', pct:69},{label:'Impact on agricultural users unclear', pct:41},{label:'Assistance program eligibility not addressed', pct:37}]
+    },
+    {
+      title:'Policy report for', level:'flagged', verdict:'83', ringColor:'var(--red)', ringBg:'var(--red-bg)', status:'Flagged', cscVal:'-176',
+      summaryPolicy:'This draft introduces new data disclosure requirements for agencies handling citizen records, including a 72-hour breach notification window.',
+      summaryAI:'Significant contradiction detected: the draft\'s notification window conflicts with a currently active state-level statute cited repeatedly in public comments and legal correspondence. Flagged for mandatory legal review before release.',
+      stakeholders:'Privacy advocacy groups, state legal counsel, agency IT and compliance officers, affected citizens.',
+      concerns:[{label:'Conflicts with existing state statute', pct:88},{label:'Breach notification window seen as too long', pct:64},{label:'Unclear enforcement mechanism', pct:49}]
+    }
+  ];
+
+  function pickRandom(displayName){
+    const base = RANDOM_RESULTS[Math.floor(Math.random() * RANDOM_RESULTS.length)];
+    return Object.assign({}, base, {
+      ok: base.level === 'clean',
+      vendors:['Regulations.gov Comments','Federal Register Notice','GDELT News Coverage','Local News Wire','Community Surveys','Call-Center Transcripts','Congress.gov Cross-check','Stakeholder Submissions','Social Sentiment Feed','Citizen Correspondence']
+    });
+  }
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => e.preventDefault());
+  dropzone.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) runScan(f.name); });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) runScan(fileInput.files[0].name); });
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('headerNewScan').classList.toggle('show', id !== 'landing');
+  }
+
+  function resolveData(name){
+    const n = name.toLowerCase();
+    if (n.includes(DATA.approved.match)) return DATA.approved;
+    if (n.includes(DATA.intern.match)) return DATA.intern;
+    return pickRandom(name);
+  }
+
+  function runScan(displayName){
+    const d = resolveData(displayName);
+    document.getElementById('scanFileName').textContent = displayName;
+    showScreen('scanning');
+    const steps = ['Parsing document…','Cross-referencing public comments…','Checking news coverage…','Scoring confidence…','Compiling briefing…'];
+    let i = 0;
+    const statusEl = document.getElementById('scanStatus');
+    const interval = setInterval(() => {
+      statusEl.textContent = steps[i]; i++;
+      if (i >= steps.length){ clearInterval(interval); setTimeout(() => renderResults(d, displayName), 450); }
+    }, 450);
+  }
+
+  function renderResults(d, displayName){
+    document.getElementById('resFileName').textContent = displayName;
+    document.getElementById('reportTitle').textContent = d.title + ' ' + new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC';
+    document.getElementById('ringN').textContent = d.verdict;
+    document.getElementById('ring').style.border = '6px solid ' + d.ringColor;
+    document.getElementById('ring').style.background = d.ringBg;
+    document.getElementById('ringN').style.color = d.ringColor;
+    document.getElementById('cscVal').textContent = d.cscVal;
+    document.getElementById('metaStatus').textContent = d.status;
+    document.getElementById('metaDate').textContent = 'Just now';
+    document.getElementById('sumPolicy').textContent = d.summaryPolicy;
+    document.getElementById('sumAI').textContent = d.summaryAI;
+    document.getElementById('stakeList').textContent = d.stakeholders;
+
+    document.getElementById('callout').textContent = d.level === 'clean'
+      ? 'This analysis is AI-generated. No conflicts detected between policy text and public feedback — human analyst sign-off still required before final release.'
+      : d.level === 'moderate'
+      ? 'This analysis is AI-generated. Some unresolved concerns detected between policy text and public feedback — recommended for human analyst review before proceeding.'
+      : 'This analysis is AI-generated. Significant conflicts detected between policy text and public feedback — human analyst review required before this draft proceeds.';
+
+    const pillClass = d.level === 'clean' ? 'ok' : d.level === 'moderate' ? 'mid' : 'bad';
+    const pillLabel = d.level === 'clean' ? '✓ Clean' : d.level === 'moderate' ? '⚠ Review' : '✕ Flagged';
+    document.getElementById('vendorGrid').innerHTML = d.vendors.map(v => `
+      <div class="vendor-row"><span>${v}</span><span class="status-pill ${pillClass}">${pillLabel}</span></div>`).join('');
+
+    const barColor = d.level === 'clean' ? 'var(--green)' : d.level === 'moderate' ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('concernsList').innerHTML = d.concerns.map(c => `
+      <div class="concern-row"><span>${c.label}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="bar-bg"><div class="bar-fill" style="width:${c.pct}%; background:${barColor}"></div></div>
+          <span style="color:var(--muted); width:32px; text-align:right;">${c.pct}%</span>
+        </div></div>`).join('');
+
+    document.getElementById('srcGrid').innerHTML = SOURCES.map(s => `<div class="src-chip"><div class="nm">${s.nm}</div><div class="ds">${s.ds}</div></div>`).join('');
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.tab[data-tab="summary"]').classList.add('active');
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-summary').classList.add('active');
+    showScreen('results');
+  }
+
+  document.getElementById('tabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+</script>
+
+</body>
+</html>
